@@ -63,16 +63,12 @@ int main() {
     pthread_join(counterThread, &finaltimeFinishingQuiz);
     if(finaltimeFinishingQuiz != NULL) {
         int time = *(int*)finaltimeFinishingQuiz;
-        printf("you finished the quiz in: ");
-        printf("%d", time);
-        printf(" secounds\n");
+        printf("You finished the quiz in: %d seconds\n", time);
+        free(finaltimeFinishingQuiz);
     }
 
-    free(finaltimeFinishingQuiz);
+    free(list.questions);
     free(count);
-    count = NULL;
-    free(score);
-    score = NULL;
 
   return 0;
 }
@@ -141,4 +137,5 @@ void play_game(ListOfQuestions* list, int* score) {
     clearConsole();
 
     printf("Your final score is:  %d\n", *score);
+    free(score);
 }
