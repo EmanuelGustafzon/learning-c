@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
+#include <unistd.h>
 
 void clearConsole() {
 #ifdef _WIN32
@@ -12,6 +14,8 @@ void clearConsole() {
 }
 
 // true or false game
+
+static bool playing;
 
 typedef struct Question Question;
 typedef struct ListOfQuestions ListOfQuestions;
@@ -30,8 +34,18 @@ struct ListOfQuestions {
 void init_list(ListOfQuestions* list, int capacity);
 int create_and_append_question(ListOfQuestions* list, char question[], bool isTrue);
 void play_game(ListOfQuestions* list, int* score);
+void* counter(void* arg);
 
 int main() {
+    pthread_t counterThread;
+    int status;
+
+    int* count = malloc(sizeof(int));
+    status = pthread_create(&counterThread, NULL, counter, count);
+    if(status) {
+        printf("could not create counter thread");
+    }
+
     ListOfQuestions list;
     init_list(&list, 10);
     create_and_append_question(&list, "Bananas is always yellow", false); 
@@ -40,12 +54,38 @@ int main() {
 
     int* score = malloc(sizeof(int));
     *score = 0;
+    
+    playing = true;
     play_game(&list, score);
+    playing = false;
 
+    void* finaltimeFinishingQuiz;
+    pthread_join(counterThread, &finaltimeFinishingQuiz);
+    if(finaltimeFinishingQuiz != NULL) {
+        int time = *(int*)finaltimeFinishingQuiz;
+        printf("you finished the quiz in: ");
+        printf("%d", time);
+        printf(" secounds\n");
+    }
+
+    free(finaltimeFinishingQuiz);
+    free(count);
+    count = NULL;
     free(score);
     score = NULL;
 
   return 0;
+}
+
+void* counter(void* arg) {
+    int count = *(int*)arg;
+    int* finalTime = (int*)malloc(sizeof(int));
+    while(playing) {
+        sleep(1);
+        count++;
+    }
+    *finalTime = count; 
+    pthread_exit((void*)finalTime);
 }
 
 void init_list(ListOfQuestions* list, int capacity) {
